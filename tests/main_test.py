@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
-from src.main import app
 from prometheus_client import REGISTRY
+
+from src.main import app
 
 client = TestClient(app)
 
@@ -100,46 +101,56 @@ def test_metrics_endpoint():
         or 0
     )
 
+
 def test_metrics_counter_increment():
-    before = REGISTRY.get_sample_value(
-        "infrastructure_events_accepted_total",
-        {"severity": "critical"}
-    ) or 0
+    before = (
+        REGISTRY.get_sample_value(
+            "infrastructure_events_accepted_total", {"severity": "critical"}
+        )
+        or 0
+    )
 
     data = {
         "source": "firewall-01",
         "severity": "critical",
-        "message": "SSH brute force detected"
+        "message": "SSH brute force detected",
     }
 
     response = client.post("/events", json=data)
 
-    after = REGISTRY.get_sample_value(
-        "infrastructure_events_accepted_total",
-        {"severity": "critical"}
-    ) or 0
+    after = (
+        REGISTRY.get_sample_value(
+            "infrastructure_events_accepted_total", {"severity": "critical"}
+        )
+        or 0
+    )
 
     assert response.status_code == 200
     assert after == before + 1
 
+
 def test_metrics_invalid_event():
-    before = REGISTRY.get_sample_value(
-        "infrastructure_events_accepted_total",
-        {"severity": "critical"}
-    ) or 0
+    before = (
+        REGISTRY.get_sample_value(
+            "infrastructure_events_accepted_total", {"severity": "critical"}
+        )
+        or 0
+    )
 
     data = {
         "source": "firewall-01",
         "severity": "banana",
-        "message": "SSH brute force detected"
+        "message": "SSH brute force detected",
     }
 
     response = client.post("/events", json=data)
 
-    after = REGISTRY.get_sample_value(
-        "infrastructure_events_accepted_total",
-        {"severity": "critical"}
-    ) or 0
+    after = (
+        REGISTRY.get_sample_value(
+            "infrastructure_events_accepted_total", {"severity": "critical"}
+        )
+        or 0
+    )
 
     assert response.status_code == 422
     assert after == before

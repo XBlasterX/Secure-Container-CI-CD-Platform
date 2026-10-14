@@ -1,0 +1,9 @@
+fastapi<1,>=0.115
+uvicorn<1,>=0.34
+pydantic<3,>=2
+prometheus-client<1,>=0.21
+
+[dev]
+pytest<10,>=8
+httpx<1,>=0.27
+ruff<1,>=0.13
