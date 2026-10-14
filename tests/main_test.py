@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from src.main import app
+from prometheus_client import REGISTRY
 
 client = TestClient(app)
 
@@ -14,7 +15,7 @@ def test_readyz():
     response = client.get("/readyz")
     assert response.status_code == 200
     assert response.json() == {"status": "ready"}
-    
+
 
 def test_version():
     response = client.get("/version")
@@ -86,3 +87,59 @@ def test_events_message_too_long():
     }
     response = client.post("/events", json=data)
     assert response.status_code == 422
+
+
+def test_metrics_endpoint():
+    response = client.get("/metrics")
+    assert response.status_code == 200
+    assert "text/plain" in response.headers["content-type"]
+    before = (
+        REGISTRY.get_sample_value(
+            "infrastructure_events_accepted_total", {"severity": "critical"}
+        )
+        or 0
+    )
+
+def test_metrics_counter_increment():
+    before = REGISTRY.get_sample_value(
+        "infrastructure_events_accepted_total",
+        {"severity": "critical"}
+    ) or 0
+
+    data = {
+        "source": "firewall-01",
+        "severity": "critical",
+        "message": "SSH brute force detected"
+    }
+
+    response = client.post("/events", json=data)
+
+    after = REGISTRY.get_sample_value(
+        "infrastructure_events_accepted_total",
+        {"severity": "critical"}
+    ) or 0
+
+    assert response.status_code == 200
+    assert after == before + 1
+
+def test_metrics_invalid_event():
+    before = REGISTRY.get_sample_value(
+        "infrastructure_events_accepted_total",
+        {"severity": "critical"}
+    ) or 0
+
+    data = {
+        "source": "firewall-01",
+        "severity": "banana",
+        "message": "SSH brute force detected"
+    }
+
+    response = client.post("/events", json=data)
+
+    after = REGISTRY.get_sample_value(
+        "infrastructure_events_accepted_total",
+        {"severity": "critical"}
+    ) or 0
+
+    assert response.status_code == 422
+    assert after == before

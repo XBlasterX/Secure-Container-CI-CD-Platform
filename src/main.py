@@ -2,12 +2,11 @@ import datetime
 import json
 
 from fastapi import FastAPI
+from fastapi.responses import Response
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, generate_latest
 
 from .log_config import logger
 from .models import Events
-from prometheus_client import Counter, Gauge, Summary
-from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
-from fastapi.responses import Response
 
 app = FastAPI(title="health-check", version="0.0.1")
 
@@ -17,11 +16,6 @@ events_counter = Counter(
     ["severity"],
 )
 
-events_counter = Counter(
-    "infrastructure_events_accepted_total",
-    "Total number of accepted infrastructure events",
-    ["message"],
-)
 
 @app.get("/healthz")
 def read_health():
@@ -45,13 +39,10 @@ def events(event: Events):
     data["event_type"] = "infrastructure_event"
 
     logger.info(json.dumps(data))
-    events_counter.labels(severity="critical").inc()
-    events_counter.labels(message="SSH brute force detected").inc()
+    events_counter.labels(severity=event.severity).inc()
     return {"status": "accepted"}
+
 
 @app.get("/metrics")
 def metrics():
-    return Response(
-        content=generate_latest(),
-        media_type=CONTENT_TYPE_LATEST
-    )
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
