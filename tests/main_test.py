@@ -94,12 +94,6 @@ def test_metrics_endpoint():
     response = client.get("/metrics")
     assert response.status_code == 200
     assert "text/plain" in response.headers["content-type"]
-    before = (
-        REGISTRY.get_sample_value(
-            "infrastructure_events_accepted_total", {"severity": "critical"}
-        )
-        or 0
-    )
 
 
 def test_metrics_counter_increment():

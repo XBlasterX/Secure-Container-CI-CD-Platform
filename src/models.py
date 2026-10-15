@@ -1,5 +1,6 @@
-from pydantic import BaseModel, StringConstraints, ConfigDict
 from typing import Annotated, Literal
+
+from pydantic import BaseModel, ConfigDict, StringConstraints
 
 
 class Events(BaseModel):

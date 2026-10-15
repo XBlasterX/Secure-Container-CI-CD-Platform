@@ -1,0 +1,10 @@
+groups:
+  - name: infrastructure-api
+    rules:
+      - alert: APIMetricsUnavailable
+        expr: up{job="infrastructure-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus cannot scrape infrastructure API"

@@ -1,17 +1,19 @@
 FROM python:3.13-slim
 
 WORKDIR /app
+COPY pyproject.toml ./
 
-# 1. Skopiuj deklarację zależności
 
-# 2. Zainstaluj zależności Pythona
+COPY src/ ./src/
 
-# 3. Skopiuj kod aplikacji
+RUN python -m pip install --no-cache-dir .
 
-# 4. Utwórz użytkownika bez uprawnień root
+RUN useradd simpleuser --create-home
 
-# 5. Przełącz kontener na tego użytkownika
+USER simpleuser
 
 EXPOSE 8000
 
-# 6. Uruchom aplikację Uvicorn
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"
+CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]

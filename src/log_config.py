@@ -1,7 +1,6 @@
 import logging
 import sys
 
-
 logger = logging.getLogger("infrastructure_events")
 
 logger.setLevel(logging.INFO)

@@ -13,3 +13,6 @@ __pycache__/
 
 
 .DS_Store
+state.md
+.vscode/
+.ruff_cache/
