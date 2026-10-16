@@ -8,7 +8,7 @@ COPY src/ ./src/
 
 RUN python -m pip install --no-cache-dir .
 
-RUN useradd simpleuser -u 1000 -g 1000 --create-home
+RUN useradd --uid 1000 --create-home --user-group simpleuser
 
 USER simpleuser
 
