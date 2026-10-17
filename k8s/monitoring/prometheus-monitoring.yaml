@@ -14,7 +14,7 @@ data:
       - job_name: infrastructure-api
         static_configs:
           - targets:
-            - api:8000
+            - secure-platform-service:8000
   alerts.yml: |
     groups:
     - name: infrastructure-api
@@ -44,6 +44,7 @@ spec:
       labels:
         app: app-prometheus
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: prometheus-container
           image: prom/prometheus:v2.44.0

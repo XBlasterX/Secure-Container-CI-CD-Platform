@@ -26,7 +26,19 @@ data:
       "id": null,
       "iteration": 1697040000000,
       "links": [],
-      "panels": [],
+      "panels": [
+        {
+          "title": "API Metrics",
+          "type": "graph",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "up{job=\"infrastructure-api\"}",
+              "legendFormat": "API Status"
+            }
+          ]
+        }
+      ],
       "schemaVersion": 40,
       "style": "dark",
       "tags": [],
@@ -50,6 +62,22 @@ data:
         type: prometheus
         access: proxy
         url: http://prometheus-service.secure-platform.svc.cluster.local:9090
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: "infrastructure"
+
+        type: file
+
+        disableDeletion: false
+
+        updateIntervalSeconds: 10
+
+        allowUiUpdates: true
+        options:
+          path: /etc/grafana/provisioning/dashboards/
+
+          foldersFromFilesStructure: true
 
 ---
 apiVersion: apps/v1
@@ -71,10 +99,13 @@ spec:
     spec:
       containers:
         - name: grafana-container
-          image: grafana/grafana:10.0.0
+          image: grafana/grafana:11.2.0
           ports:
             - containerPort: 3000
           volumeMounts:
+            - name: grafana-dashboard-volume
+              mountPath: /etc/grafana/provisioning/dashboards/dashboards.yaml
+              subPath: dashboards.yaml
             - name: grafana-dashboard-volume
               mountPath: /etc/grafana/provisioning/dashboards/dashboard.json
               subPath: dashboard.json
@@ -90,6 +121,8 @@ spec:
                 path: dashboard.json
               - key: prometheus-datasource.yaml
                 path: prometheus-datasource.yaml
+              - key: dashboards.yaml
+                path: dashboards.yaml
 ---
 apiVersion: v1
 kind: Service
