@@ -80,7 +80,6 @@ jobs:
           scan-type: image
           format: "spdx-json"
           output: "sbom.spdx"
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       - name: RUN TRIVY VULNERABILITY SCAN
 
         uses: aquasecurity/trivy-action@v0.36.0
@@ -92,7 +91,6 @@ jobs:
           exit-code: "1"
           ignore-unfixed: false
           severity: "CRITICAL,HIGH"
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       - name: Save Docker image
         run: docker save -o image.tar image:latest
 

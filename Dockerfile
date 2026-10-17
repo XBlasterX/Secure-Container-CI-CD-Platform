@@ -7,11 +7,7 @@ COPY src/ ./src/
 
 RUN python -m pip install --no-cache-dir .
 
-RUN apk add --no-cache 
-
 RUN python -m pip uninstall -y pip
-
-RUN find / -xdev -perm /6000 -type f -exec chmod a-s {} \; || true
 
 RUN adduser -D -u 1000 -h /home/simpleuser simpleuser
 
