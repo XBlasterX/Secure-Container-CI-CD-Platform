@@ -21,34 +21,13 @@ See [Verification evidence and pending scenarios](documentation/VERIFICATION.md)
 
 ## Architecture
 
-```text
-                         GitHub repository
-                                |
-                         push / pull request
-                                |
-                         GitHub Actions
-                                |
-                      Ruff + Pytest (13 tests)
-                                |
-                           Docker build
-                                |
-                       Trivy + SBOM generation
-                                |
-                       Security gate passed
-                                |
-                       GHCR image publication
-                         (push to main)
-                                |
-                    Manual deployment to kind
-                                |
-                        Kubernetes cluster
-                         /             \
-                  FastAPI (2 Pods)    Prometheus
-                         |                |
-                    ClusterIP Service     +-- Grafana
-```
+| Path | Build and verification | Destination |
+| --- | --- | --- |
+| GitHub Actions | Ruff/Pytest → API image build → SBOM generation → Trivy gate → image artifact | GHCR publication on successful push to `main` |
+| Docker Compose | Local API build; separate upstream Prometheus/Grafana images | Local Compose stack |
+| kind | Separate local API build → kind image load → manual `kubectl apply` | Local Kubernetes cluster |
 
-The workflow automatically publishes a scanned container image to **GitHub Container Registry (GHCR)**. The Kubernetes environment is deployed separately using `kubectl`.
+The workflow automatically publishes a scanned API image to **GitHub Container Registry (GHCR)**. Compose and kind build separate local images; the kind instructions do not deploy the published GHCR digest.
 
 ## Technology stack
 
@@ -65,9 +44,9 @@ The workflow automatically publishes a scanned container image to **GitHub Conta
 ## Features
 
 - REST API for validated infrastructure events, with structured JSON logging and Prometheus metrics.
-- Automated linting and **13 API tests** on pushes to `main` and pull requests targeting `main`.
+- Automated linting and **13 in-process FastAPI tests** on pushes to `main`, pull requests targeting `main` and manual workflow dispatch.
 - Docker image builds followed by Trivy scanning; HIGH/CRITICAL findings fail the CI job.
-- CycloneDX SBOM uploaded as a GitHub Actions artifact and an additional SPDX SBOM generated during CI.
+- CycloneDX SBOM retained as a GitHub Actions artifact; SPDX SBOM generated during CI but not currently retained.
 - SHA-tagged container images published to GHCR on successful pushes to `main`.
 - Kubernetes Deployment with **two API replicas**, health probes, CPU/memory limits and a non-root security context.
 - Prometheus metrics collection, an availability alert rule and Grafana dashboards.
@@ -183,6 +162,8 @@ Workflow: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 | `build_scan` | Build image, generate SBOMs, scan with Trivy, upload image artifact |
 | `publish` | Download scanned image, tag with the commit SHA, push to GHCR |
 
+All 13 workflow action references are pinned to full commit SHAs. Trivy `v0.76.0` is installed once and reused for both SBOM formats and the blocking scan. CI logs the scanner version, available database metadata and local image ID/architecture. Vulnerability databases remain updated; repeating a result requires the same image and database snapshot as well as the same scanner version.
+
 The `publish` job runs only for successful pushes to `main`. It reuses the image artifact produced by `build_scan` rather than rebuilding the image after scanning.
 
 [View CI runs](https://github.com/XBlasterX/Secure-Container-CI-CD-Platform/actions/workflows/ci.yml)
@@ -203,6 +184,7 @@ python -m pytest -q
 - Kubernetes API Pods disable privilege escalation, drop Linux capabilities and use the `RuntimeDefault` seccomp profile.
 - Readiness/liveness probes and resource requests/limits are configured for the API Deployment.
 - Trivy blocks image publication when it reports HIGH or CRITICAL vulnerabilities.
+- The Trivy gate scans the API image; monitoring images and Kubernetes runtime behavior are outside this CI gate.
 - CI permissions are scoped by job; package publication uses `packages: write`.
 
 For configuration details, see [Architecture](documentation/ARCHITECTURE.md) and [Security](documentation/SECURITY.md). For observed results and their limits, see [Verification](documentation/VERIFICATION.md).
