@@ -37,13 +37,3 @@ The project compared Debian-based Python runtime images using Trivy and observed
 | Medium | No persistent metrics/dashboard volumes and no alert routing | Add PVC and Alertmanager / notification configuration |
 | Medium | No documented end-to-end cluster security regression suite | Test fresh install, permissions, configuration and intended network behavior |
 | Low | Generated reports and Python build artifacts are checked in | Curate evidence and remove generated files from normal Git tracking |
-
-## Honest boundaries for interviews
-
-- **Not full CD to Kubernetes:** CI automatically builds, tests, scans and publishes; Kubernetes deployment is manual.
-- **Not guaranteed vulnerability-free:** The scanner found no gate-blocking vulnerabilities in the specific successful run.
-- **Not a production observability stack:** No HA, durable time-series store or notification routing.
-- **Not comprehensive per-Pod visibility:** `up{job="infrastructure-api"}` currently checks a Service target.
-- **No claim of verified compliance:** Security settings are learning controls, not a certification or formal audit.
-
-The point of the project is to implement and explain concrete risk-reduction mechanisms and their limitations.
