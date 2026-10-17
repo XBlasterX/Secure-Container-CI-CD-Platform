@@ -1,0 +1,107 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-config
+  namespace: secure-platform
+data:
+  dashboard.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": "-- Grafana --",
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "gnetId": null,
+      "graphTooltip": 0,
+      "id": null,
+      "iteration": 1697040000000,
+      "links": [],
+      "panels": [],
+      "schemaVersion": 40,
+      "style": "dark",
+      "tags": [],
+      "templating": {
+        "list": []
+      },
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Secure Platform Dashboard",
+      "uid": null,
+      "version": 1
+    }
+  prometheus-datasource.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus-service.secure-platform.svc.cluster.local:9090
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-deployment
+  namespace: secure-platform
+  labels:
+    app: app-grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-grafana
+  template:
+    metadata:
+      labels:
+        app: app-grafana
+    spec:
+      containers:
+        - name: grafana-container
+          image: grafana/grafana:10.0.0
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: grafana-dashboard-volume
+              mountPath: /etc/grafana/provisioning/dashboards/dashboard.json
+              subPath: dashboard.json
+            - name: grafana-dashboard-volume
+              mountPath: /etc/grafana/provisioning/datasources/prometheus-datasource.yaml
+              subPath: prometheus-datasource.yaml
+      volumes:
+        - name: grafana-dashboard-volume
+          configMap:
+            name: grafana-dashboard-config
+            items:
+              - key: dashboard.json
+                path: dashboard.json
+              - key: prometheus-datasource.yaml
+                path: prometheus-datasource.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: secure-platform
+  labels:
+    app: app-grafana
+spec:
+  type: ClusterIP
+  selector:
+    app: app-grafana
+  ports:
+    - protocol: TCP
+      port: 3000

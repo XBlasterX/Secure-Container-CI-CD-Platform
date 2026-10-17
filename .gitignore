@@ -16,3 +16,4 @@ __pycache__/
 state.md
 .vscode/
 .ruff_cache/
+.qodo
