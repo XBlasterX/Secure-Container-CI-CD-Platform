@@ -4,6 +4,21 @@ A containerized **FastAPI infrastructure-event API** with automated testing, vul
 
 [![CI](https://github.com/XBlasterX/Secure-Container-CI-CD-Platform/actions/workflows/ci.yml/badge.svg)](https://github.com/XBlasterX/Secure-Container-CI-CD-Platform/actions/workflows/ci.yml)
 
+## Verification status
+
+Evidence snapshot: **17 October 2026**, commit [`ba7fe4e`](https://github.com/XBlasterX/Secure-Container-CI-CD-Platform/commit/ba7fe4e2f3bf5261d036a3e8198345f33c71e25e), [CI run #19](https://github.com/XBlasterX/Secure-Container-CI-CD-Platform/actions/runs/39051900362) (push to `main`).
+
+| Area | Confirmed result | Scope / remaining verification |
+| --- | --- | --- |
+| Application checks | Ruff passed; Pytest: **13 passed, 1 warning** | In-process FastAPI `TestClient` tests; the built container is not started by CI |
+| Image build and scan | Linux/amd64 image built; Trivy HIGH/CRITICAL gate passed | Applies to this image and scan date; monitoring images and runtime security are outside this gate |
+| SBOM | CycloneDX generated and uploaded as the `sbom` artifact; SPDX generation succeeded | `sbom.spdx` is not uploaded by the workflow |
+| Image publication | `publish` loaded the scanned image artifact and successfully pushed its SHA tag to GHCR | Publication is confirmed; pulling and running the registry image is not tested by this workflow |
+| Service readiness | Docker health check and Kubernetes probes are configured | No Compose/container/cluster smoke test runs in CI; `/readyz` returns a fixed response without dependency checks |
+| Monitoring and deployment | Compose configuration and manual kind deployment manifests are present | End-to-end readiness, independent health of both replicas and alert delivery are not established by this CI run |
+
+See [Verification evidence and pending scenarios](documentation/VERIFICATION.md) for job links, the published image digest and the remaining checks.
+
 ## Architecture
 
 ```text
@@ -50,7 +65,7 @@ The workflow automatically publishes a scanned container image to **GitHub Conta
 ## Features
 
 - REST API for validated infrastructure events, with structured JSON logging and Prometheus metrics.
-- Automated linting and **13 API tests** on every push and pull request targeting `main`.
+- Automated linting and **13 API tests** on pushes to `main` and pull requests targeting `main`.
 - Docker image builds followed by Trivy scanning; HIGH/CRITICAL findings fail the CI job.
 - CycloneDX SBOM uploaded as a GitHub Actions artifact and an additional SPDX SBOM generated during CI.
 - SHA-tagged container images published to GHCR on successful pushes to `main`.
@@ -88,7 +103,7 @@ Stop the stack:
 docker compose down
 ```
 
-The Compose services use an internal Docker network, and published ports are bound to localhost.
+The Compose services use a user-defined bridge network, and published ports are bound to localhost. Compose builds the API locally; it does not pull the image published by CI.
 
 ## API endpoints
 
@@ -190,7 +205,7 @@ python -m pytest -q
 - Trivy blocks image publication when it reports HIGH or CRITICAL vulnerabilities.
 - CI permissions are scoped by job; package publication uses `packages: write`.
 
-For configuration details, see [Architecture](documentation/ARCHITECTURE.md) and [Security](documentation/SECURITY.md).
+For configuration details, see [Architecture](documentation/ARCHITECTURE.md) and [Security](documentation/SECURITY.md). For observed results and their limits, see [Verification](documentation/VERIFICATION.md).
 
 ## Repository structure
 
@@ -203,5 +218,5 @@ For configuration details, see [Architecture](documentation/ARCHITECTURE.md) and
 | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | CI, security scans and GHCR publishing |
 | [`k8s/`](k8s/) | Kubernetes API and monitoring manifests |
 | [`monitoring/`](monitoring/) | Prometheus and Grafana configuration for Compose |
-| [`documentation/`](documentation/) | Architecture and security documentation |
+| [`documentation/`](documentation/) | Architecture, security and verification evidence |
 
