@@ -87,7 +87,7 @@ Common mistakes in this lab:
 
 ## Operational constraints
 
-The existing Kubernetes manifests do not provide persistent volumes for Prometheus or Grafana. Data can be lost if a Pod is replaced. The Prometheus alert rule is loaded but there is no notification delivery system. Monitoring images have no documented availability guarantees and the Grafana/Prometheus manifests have fewer workload hardening controls than the API Deployment.
+The existing Kubernetes manifests do not provide persistent volumes for Prometheus or Grafana. Data can be lost if a Pod is replaced. The Prometheus configuration references the alert rule file; runtime rule loading and firing have not been verified in the recorded evidence. No notification delivery system is configured. Monitoring images have no documented availability guarantees and the Grafana/Prometheus manifests have fewer workload hardening controls than the API Deployment.
 
 **Next hardening steps:** independent Pod scraping, stronger security contexts and resource requests on monitoring workloads, ServiceAccount token controls, Kubernetes Secrets and admin-password management, persistent volumes, a multi-architecture immutable image publication strategy and (if desired) an explicit deployment pipeline.
 
