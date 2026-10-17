@@ -1,15 +1,19 @@
-FROM python:3.12-slim
+FROM python:3.13-alpine
 
 WORKDIR /app
 COPY pyproject.toml ./
-
-RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
 COPY src/ ./src/
 
 RUN python -m pip install --no-cache-dir .
 
-RUN useradd --uid 1000 --create-home --user-group simpleuser
+RUN apk add --no-cache 
+
+RUN python -m pip uninstall -y pip
+
+RUN find / -xdev -perm /6000 -type f -exec chmod a-s {} \; || true
+
+RUN adduser -D -u 1000 -h /home/simpleuser simpleuser
 
 USER simpleuser
 
