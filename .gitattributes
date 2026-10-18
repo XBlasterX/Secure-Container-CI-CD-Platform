@@ -1,0 +1,3 @@
+reports/** linguist-generated
+*.yml linguist-detectable
+*.yaml linguist-detectable
