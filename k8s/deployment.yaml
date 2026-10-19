@@ -17,6 +17,7 @@ spec:
       labels:
         app: secure-platform
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: secure-platform-container
           image: secure-api:k8s-v1
