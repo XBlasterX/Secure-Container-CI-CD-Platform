@@ -81,16 +81,7 @@ jobs:
           name: sbom
           path: sbom.json
 
-      - name: Generate SBOM in SPDX format
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          skip-setup-trivy: true
-          image-ref: image:latest
-          scan-type: image
-          format: "spdx-json"
-          output: "sbom.spdx"
       - name: RUN TRIVY VULNERABILITY SCAN
-
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           skip-setup-trivy: true
@@ -101,9 +92,6 @@ jobs:
           ignore-unfixed: false
           severity: "CRITICAL,HIGH"
           scanners: "vuln,secret"
-      - name: Record scanner database metadata
-        if: always() && steps.trivy_setup.outcome == 'success'
-        run: trivy --version
 
       - name: Save Docker image
         run: docker save -o image.tar image:latest

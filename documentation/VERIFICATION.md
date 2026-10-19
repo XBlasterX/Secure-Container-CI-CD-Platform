@@ -27,7 +27,6 @@ The [test suite](../tests/main_test.py) uses FastAPI's in-process `TestClient`. 
 | Docker build | `image:latest` built and loaded for `linux/amd64`; log records Python Alpine and Alpine 3.24.2 | Build success does not prove the image starts or its health check passes |
 | Trivy vulnerability gate | Trivy 0.76.0 completed successfully; the filtered report shows 0 HIGH/CRITICAL vulnerabilities for the listed OS and Python package targets | `severity: CRITICAL,HIGH`, `exit-code: 1`, `ignore-unfixed: false`; this is not a claim of zero vulnerabilities at every severity |
 | CycloneDX SBOM | `sbom.json` generated and uploaded as artifact `sbom` (ID `12108206036`) | Artifact existence does not establish inventory completeness or SBOM validation |
-| SPDX SBOM | The `sbom.spdx` generation step succeeded | No workflow step uploads that file |
 | Image handoff | `image.tar` saved and uploaded as `docker-image` (ID `12107972657`) after the scan passed | Prometheus and Grafana images from Compose are not scanned by this job |
 
 The Dockerfile configures a non-root user (UID 1000) and a Docker `HEALTHCHECK` against `/healthz`. Neither is exercised as a runtime assertion by the reviewed workflow. Scanner results depend on the image, scanner/database versions and scan date; they do not establish general runtime security.

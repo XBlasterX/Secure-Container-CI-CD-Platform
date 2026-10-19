@@ -12,7 +12,7 @@ Evidence snapshot: **17 October 2026**, commit [`ba7fe4e`](https://github.com/XB
 | --- | --- | --- |
 | Application checks | Ruff passed; Pytest: **13 passed, 1 warning** | In-process FastAPI `TestClient` tests; the built container is not started by CI |
 | Image build and scan | Linux/amd64 image built; Trivy HIGH/CRITICAL gate passed | Applies to this image and scan date; monitoring images and runtime security are outside this gate |
-| SBOM | CycloneDX generated and uploaded as the `sbom` artifact; SPDX generation succeeded | `sbom.spdx` is not uploaded by the workflow |
+| SBOM | CycloneDX generated and uploaded as the `sbom` artifact | Attached to CI run as artifact |
 | Image publication | `publish` loaded the scanned image artifact and successfully pushed its SHA tag to GHCR | Publication is confirmed; pulling and running the registry image is not tested by this workflow |
 | Service readiness | Docker health check and Kubernetes probes are configured | No Compose/container/cluster smoke test runs in CI; `/readyz` returns a fixed response without dependency checks |
 | Monitoring and deployment | Compose configuration and manual kind deployment manifests are present | End-to-end readiness, independent health of both replicas and alert delivery are not established by this CI run |
@@ -37,7 +37,7 @@ The workflow automatically publishes a scanned API image to **GitHub Container R
 | Testing and linting | Pytest, Ruff |
 | Containers | Docker, Docker Compose, Alpine Linux |
 | CI and image registry | GitHub Actions, GHCR |
-| Container security | Trivy, CycloneDX / SPDX SBOM |
+| Container security | Trivy, CycloneDX SBOM |
 | Orchestration | Kubernetes, kind, kubectl |
 | Monitoring | Prometheus, Grafana |
 
@@ -46,9 +46,9 @@ The workflow automatically publishes a scanned API image to **GitHub Container R
 - REST API for validated infrastructure events, with structured JSON logging and Prometheus metrics.
 - Automated linting and **13 in-process FastAPI tests** on pushes to `main`, pull requests targeting `main` and manual workflow dispatch.
 - Docker image builds followed by Trivy scanning; HIGH/CRITICAL findings fail the CI job.
-- CycloneDX SBOM retained as a GitHub Actions artifact; SPDX SBOM generated during CI but not currently retained.
+- CycloneDX SBOM retained as a GitHub Actions artifact.
 - SHA-tagged container images published to GHCR on successful pushes to `main`.
-- Kubernetes Deployment with **two API replicas**, health probes, CPU/memory limits and a non-root security context.
+- Kubernetes Deployment with **two API replicas**, health probes, CPU/memory limits, non-root security context and disabled ServiceAccount token automounting.
 - Prometheus metrics collection, an availability alert rule and Grafana dashboards.
 
 ## Quick start — Docker Compose
@@ -162,7 +162,7 @@ Workflow: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 | `build_scan` | Build image, generate SBOMs, scan with Trivy, upload image artifact |
 | `publish` | Download scanned image, tag with the commit SHA, push to GHCR |
 
-All 13 workflow action references are pinned to full commit SHAs. Trivy `v0.76.0` is installed once and reused for both SBOM formats and the blocking scan. CI logs the scanner version, available database metadata and local image ID/architecture. Vulnerability databases remain updated; repeating a result requires the same image and database snapshot as well as the same scanner version.
+All 12 workflow action references are pinned to full commit SHAs. Trivy `v0.76.0` is installed once and reused for SBOM generation and the blocking scan. CI logs the scanner version, available database metadata and local image ID/architecture. Vulnerability databases remain updated; repeating a result requires the same image and database snapshot as well as the same scanner version.
 
 The `publish` job runs only for successful pushes to `main`. It reuses the image artifact produced by `build_scan` rather than rebuilding the image after scanning.
 

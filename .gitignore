@@ -18,3 +18,5 @@ state.md
 .ruff_cache/
 .qodo
 *.egg-info/
+build/
+dist/
